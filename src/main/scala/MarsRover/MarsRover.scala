@@ -88,9 +88,6 @@ case class Rover(position: GridSquare,
 
   def tryAllPaths(paths: List[List[GridSquare]]): Rover = {
     val rovers = paths.map(executeMoves)
-    val moves = rovers.map(r => Map(1 -> r.moves))
-
-    moves.foreach(println)
     rovers.minBy(_.moves.length)
   }
 
