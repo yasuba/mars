@@ -3,6 +3,8 @@ package MarsRover
 import MarsRover.Command.{Forwards, RotateAntiClockwise, RotateClockwise}
 import MarsRover.Orientation._
 
+import scala.annotation.tailrec
+
 case class GridSquare(xAxis: Int, yAxis: Int)
 
 sealed trait Command
@@ -38,6 +40,7 @@ case class Rover(position: GridSquare,
                  orientation: Orientation,
                  moves: List[Command],
                  limit: (Int, Int),
+                 destination: GridSquare,
                  mountains: List[GridSquare]) {
 
   def forwards: Rover = {
@@ -62,29 +65,30 @@ case class Rover(position: GridSquare,
 
   def checkForMountains(newPosition: GridSquare): Rover =
     if (mountains.contains(newPosition)) this
-    else Rover(newPosition, orientation, moves :+ Forwards, limit, mountains)
+    else Rover(newPosition, orientation, moves :+ Forwards, limit, destination, mountains)
 
   def rotateClockwise: Rover =
     orientation match {
-      case Right => Rover(position, Down, moves :+ RotateClockwise, limit, mountains)
-      case Left => Rover(position, Up, moves :+ RotateClockwise, limit, mountains)
-      case Up => Rover(position, Right, moves :+ RotateClockwise, limit, mountains)
-      case Down => Rover(position, Left, moves :+ RotateClockwise, limit, mountains)
+      case Right => Rover(position, Down, moves :+ RotateClockwise, limit, destination, mountains)
+      case Left => Rover(position, Up, moves :+ RotateClockwise, limit, destination, mountains)
+      case Up => Rover(position, Right, moves :+ RotateClockwise, limit, destination, mountains)
+      case Down => Rover(position, Left, moves :+ RotateClockwise, limit, destination, mountains)
     }
 
   def rotateAntiClockwise: Rover =
     orientation match {
-      case Right => Rover(position, Up, moves :+ RotateAntiClockwise, limit, mountains)
-      case Left => Rover(position, Down, moves :+ RotateAntiClockwise, limit, mountains)
-      case Up => Rover(position, Left, moves :+ RotateAntiClockwise, limit, mountains)
-      case Down => Rover(position, Right, moves :+ RotateAntiClockwise, limit, mountains)
+      case Right => Rover(position, Up, moves :+ RotateAntiClockwise, limit, destination, mountains)
+      case Left => Rover(position, Down, moves :+ RotateAntiClockwise, limit, destination, mountains)
+      case Up => Rover(position, Left, moves :+ RotateAntiClockwise, limit, destination, mountains)
+      case Down => Rover(position, Right, moves :+ RotateAntiClockwise, limit, destination, mountains)
     }
 
   def coordToCommand(coord: GridSquare, rover: Rover): Rover =
     if (rover.forwards.position == coord) rover.forwards
     else if (rover.rotateClockwise.forwards.position == coord) rover.rotateClockwise.forwards
     else if (rover.rotateAntiClockwise.forwards.position == coord) rover.rotateAntiClockwise.forwards
-    else rover.rotateClockwise.rotateClockwise.forwards
+    else if (rover.rotateClockwise.rotateClockwise.forwards.position == coord) rover.rotateClockwise.rotateClockwise.forwards
+    else rover.rotateAntiClockwise.rotateAntiClockwise.forwards
 
   def tryAllPaths(paths: List[List[GridSquare]]): Rover = {
     val rovers = paths.map(executeMoves)
@@ -92,6 +96,7 @@ case class Rover(position: GridSquare,
   }
 
   def executeMoves(coords: List[GridSquare]): Rover = {
+    @tailrec
     def loop(coords: List[GridSquare], rover: Rover): Rover =
       coords match {
         case Nil      => this

@@ -1,6 +1,28 @@
 import MarsRover.GridSquare
 
 object Pathfinder {
+  def zigZagPath(xFirst: Boolean, end: GridSquare): List[(Int, Int)] = {
+    val paths = for {
+        coord      <- 1 to end.xAxis
+        coordPlus1 = if (coord + 1 >= end.xAxis) end.xAxis else coord + 1
+      } yield {
+      if (xFirst) List((coordPlus1, coord), (coordPlus1, coordPlus1))
+      else List((coord, coordPlus1), (coordPlus1, coordPlus1))
+    }
+    paths.toList.flatten
+  }
+
+  def zigZagReverse(xFirst: Boolean, end: GridSquare, limit: Int): List[(Int, Int)] = {
+    val paths = for {
+      coord       <- 1 to end.xAxis
+      reverseCoord <- (1 to end.xAxis).reverse
+      coordMinus1 = if (coord - 1 <= 1) limit else coord - 1
+    } yield {
+      if (xFirst) List((coordMinus1, coord), (coordMinus1, coordMinus1))
+      else List((coord, coordMinus1), (coordMinus1, coordMinus1))
+    }
+    paths.toList.flatten
+  }
 
   def increment(first: Boolean, range: Range, incX: Boolean, start: GridSquare, end: GridSquare): List[(Int, Int)] =
     (for {
@@ -35,6 +57,7 @@ object Pathfinder {
       createPath(xNegativeRange, yPositiveRange, xFirst = false),
       createPath(xPositiveRange, yNegativeRange, xFirst = false)
     )
+
   }
 
   def shortestPath(limit: Int, start: GridSquare, end: GridSquare): List[List[GridSquare]] = {
